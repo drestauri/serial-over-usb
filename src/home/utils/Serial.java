@@ -138,7 +138,7 @@ public class Serial implements SerialPortEventListener {
     // Constructor. Can take a number 3 to 9 if there's a specific comm port to use
     public Serial(int ncom){
     	
-        if(ncom>3 && ncom<=9)
+        if(ncom>=3 && ncom<=9)
             PORT_NAMES[2] = "COM" + Integer.toString(ncom);
         initialize();
         Thread t=new Thread() {
