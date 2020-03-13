@@ -2,10 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Program Files/Amazon Corretto/jre8/lib/ext/RXTXcomm.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Program Files/Amazon Corretto/jre8/bin"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="lib/jSerialComm-2.6.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

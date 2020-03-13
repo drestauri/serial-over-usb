@@ -1,5 +1,3 @@
-
-
 package home.utils;
 
 import java.io.BufferedReader;
@@ -7,151 +5,206 @@ import java.io.InputStreamReader;
 //import java.io.OutputStream;
 import java.util.Enumeration;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 
-// More info on the source of my code:
-// https://stackoverflow.com/questions/15996345/java-arduino-read-data-from-the-serial-port
+
+// More info on this code:
+// https://github.com/Fazecast/jSerialComm/wiki/Event-Based-Reading-Usage-Example
 
 // SETUP:
-// Get RXTX for Java (RXTXcomm.jar). Google it.
-// Comes with a Jar and 2 .dll files
-// Per the install instructions, put the jar in <JAVA_HOME>\jre\lib\ext & the dlls in \jre\bin.
-// In Eclipse, Go to Project -> properties -> Java build path -> Libraries -> Add External Jars. Find your RXTX jar
-// Expand the JAR's details. Select Native library location and edit it to point to RXTX's shared library location.
+// Get the jSerialComm JAR from:
+//	https://fazecast.github.io/jSerialComm/
+// Add it to the build path of the project and all should work ok.
+// I read some stuff only works on windows due to the way Linux does serial comm so
+// this may only work on windows
 
-// Of course, make sure your DATA_RATE matches the Baud rate of your Arduino or whatever. In my case, 9600
-// I didn't write to my Arduino for my project so I commented "output" out. 
-// Note about 1 in 5 data points from my Arduino triggered the exception violation so I just ignore that. It didn't make
-// anything crash, just make my output window a little busy.
+public class Serial implements SerialPortDataListener{
+	private SerialPort serialPort = null;
+	
+	private char[] dataBuffer = new char[8];
+	private int bufIndex = 0;
+	
+	private static final String PORT_NAMES[] = {
+			"/dev/tty.usbserial-A9007UX1", // Mac OS X
+			"/dev/ttyUSB0", // Linux
+			"COM3", // Windows
+			};
 
-public class Serial implements SerialPortEventListener {
-    SerialPort serialPort;
+	private BufferedReader input;
+	//private static OutputStream output;
+	private static final int TIME_OUT = 2000;
+	private static final int DATA_RATE = 9600;
+	
+	private int lastVal = 0;
+	private boolean isDataAvail = false;
 
-    private static final String PORT_NAMES[] = {
-            "/dev/tty.usbserial-A9007UX1", // Mac OS X
-            "/dev/ttyUSB0", // Linux
-            "COM3", // Windows
-    };
+	public void initialize() {
+		// Get a list of the current ports on this machine
+		SerialPort[] ports = SerialPort.getCommPorts();
+		
+		// Check each port for a match to our expected ports list PORT_NAMES
+		for (SerialPort port : ports) 
+		{
+			String currPortId = port.getSystemPortName();
+			for (String portName : PORT_NAMES)
+			{
+				if (currPortId.equals(portName))
+				{
+					serialPort = port;
+					break;
+				}
+			}
+		}
+		
+		// If we couldn't find a matching port
+		if (serialPort == null) {
+			System.out.println("Could not find COM port.");
+			return;
+		}
 
-    private BufferedReader input;
-    //private static OutputStream output;
-    private static final int TIME_OUT = 2000;
-    private static final int DATA_RATE = 9600;
-    
-    private int lastVal = 0;
-    private boolean isDataAvail = false;
+		// Open the port and set the comm parameters, get the input and output streams
+		try 
+		{
+			System.out.print("Attempting to open port: ");
+			System.out.println(serialPort.getSystemPortName());
+			if(serialPort.openPort())
+			{
+			System.out.println("Port opened successfully.");
+			input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
+			}
+			else {
+				System.out.println("Unable to open the port.");
+			}
+		            
+			serialPort.setComPortParameters(DATA_RATE, 8, 1, SerialPort.NO_PARITY);
+			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+		
+			input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
+			//output = serialPort.getOutputStream();
+		
+			serialPort.addDataListener(this);
+			// TODO: Comment this out to see if necessary
+			serialPort.notifyAll();
+			//serialPort.notifyOnDataAvailable(true);
+		}
+		catch (Exception e) {
+			System.err.print("Error 1 (this always gets called once for some reason):");
+			System.err.println(e.toString());
+		}
+	}
 
-    public void initialize() {
-        CommPortIdentifier portId = null;
-        
-        // Get a list of the current ports on this machine
-        Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
+	@Override
+	public int getListeningEvents() 
+	{
+		// LISTENING_EVENT_DATA_AVAILABLE = any data has been received
+		// LISTENING_EVENT_DATA_RECEIVED = data read from serial port
+		return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+	}
+  
+	// Callback? for if data is on the serial port
+	public synchronized void serialEvent(SerialPortEvent oEvent) {
+		// LISTENING_EVENT_DATA_AVAILABLE = any data has been received
+		// LISTENING_EVENT_DATA_RECEIVED = data read from serial port
+		if(oEvent.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+			return;
 
-        // Check each port for a match to our expected ports list PORT_NAMES
-        while (portEnum.hasMoreElements()) {
-            CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-            for (String portName : PORT_NAMES) {
-                if (currPortId.getName().equals(portName)) {
-                    portId = currPortId;
-                    break;
-                }
-            }
-        }
-        
-        // If we couldn't find a matching port
-        if (portId == null) {
-            System.out.println("Could not find COM port.");
-            return;
-        }
+		processDataAvailable();
+		//processDataReceived(oEvent.getReceivedData());
+	}
+   
+	private void processDataAvailable()
+	{
+		// Create a buffer the size of the bytes available
+		byte[] newData = new byte[serialPort.bytesAvailable()];
+		// Fill the buffer with data off the serial bus
+		int numRead = serialPort.readBytes(newData, newData.length);
 
-        // Open the port and set the comm parameters, get the input and output streams
-        try {
-            serialPort = (SerialPort) portId.open(this.getClass().getName(),TIME_OUT);
+		// Step through each character in the newData buffer
+		for (int i = 0; i < newData.length; ++i)
+		{
+			// Check the value as character
+			char c = (char)newData[i];
 
-            serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			// Values like 251 come across as '2', '5', '1', 13, 10 where 13 & 10 are the integer values 2 white space values
+			// If we see a number character
+			if(c >= '0' && c <= '9')
+			{
+				// put the character in the string
+				dataBuffer[bufIndex] = c;
+				bufIndex++; 
+			}
+			else
+			{
+				//TODO: If we had some non-newline characters (bufIndex>0) and now see a newline, convert the buffer to a value and reset
+				// For now, it just prints the buffer
+				if(bufIndex>0)
+				{
+					for(int j=0;j<bufIndex;j++)
+					{
+						System.out.print(dataBuffer[j]);
+					}
 
-            input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-            //output = serialPort.getOutputStream();
+					//System.out.println(", buffer size: " + (bufIndex-1) + "; last char: " + (int)c);
+					System.out.println();
+				}
 
-            serialPort.addEventListener(this);
-            serialPort.notifyOnDataAvailable(true);
-        }
-        catch (Exception e) {
-        	System.err.print("Error 1:");
-            System.err.println(e.toString());
-        }
-    }
+				// set the buf index to point to the 1st char
+				bufIndex = 0;
+			}
+		}
+	}
 
-    
-    // Callback? for if data is on the serial port
-    public synchronized void serialEvent(SerialPortEvent oEvent) {
-        if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-            try {
-                String inputLine=input.readLine();
-                // Make sure the string is an integer and convert it
-                lastVal = convertToInt(inputLine);
-                // In case it's not an integer, set the data avail flag to false to make
-                // sure -1 isn't accidentally used
-                if (lastVal > 0)
-                	isDataAvail = true;
-                else
-                	isDataAvail = false;
-                System.out.println(lastVal);
-            } catch (Exception e) {
-            	// This error prints often, about every 5 times
-            	//System.err.print("Error 2:");
-                //System.err.println(e.toString());
-            }
-        }
-    }
+	private void processDataReceived(byte[] newData)
+	{ 
+		for (int i = 0; i < newData.length; ++i)
+			System.out.print((char)newData[i]);
+		System.out.println("\n");
+	}
+  
+	// CLose the serial port
+	public synchronized void close() {
+		if (serialPort != null) {
+			serialPort.removeDataListener();
+			serialPort.closePort();
+		}
+	}
+  
+	private int convertToInt(String s)
+	{
+		boolean isNumeralsOnly = true;
+		for (int i = 0; i<s.length();i++)
+		{
+			if(s.charAt(i)<'0' || s.charAt(i)>'9')
+			{
+				System.out.print("Found in response: ");
+				System.out.println(s.charAt(i));
+				isNumeralsOnly = false;
+			}
+		}
+		if (isNumeralsOnly)
+			return Integer.parseInt(s);
+		else
+			return -1;
+	}
 
-    
-    // CLose the serial port
-    public synchronized void close() {
-        if (serialPort != null) {
-            serialPort.removeEventListener();
-            serialPort.close();
-        }
-    }
-    
-    private int convertToInt(String s)
-    {
-    	boolean isNumeralsOnly = true;
-    	for (int i = 0; i<s.length();i++)
-    	{
-    		if(s.charAt(i)<'0' || s.charAt(i)>'9')
-    		{
-    			System.out.print("Found in response: ");
-    			System.out.println(s.charAt(i));
-    			isNumeralsOnly = false;
-    		}
-    	}
-    	if (isNumeralsOnly)
-    		return Integer.parseInt(s);
-    	else
-    		return -1;
-    }
+	// Constructor. Can take a number 3 to 9 if there's a specific comm port to use
+	public Serial(int ncom){
+		if(ncom>3 && ncom<=9)
+			PORT_NAMES[2] = "COM" + Integer.toString(ncom);
+		initialize();
+		Thread t=new Thread() {
+			public void run() {
+				try {Thread.sleep(1000000);} catch (InterruptedException ie) {}
+			}
+		};
+		t.start();
+		System.out.println("Serial Comms Started");
+	}
 
-    // Constructor. Can take a number 3 to 9 if there's a specific comm port to use
-    public Serial(int ncom){
-    	
-        if(ncom>=3 && ncom<=9)
-            PORT_NAMES[2] = "COM" + Integer.toString(ncom);
-        initialize();
-        Thread t=new Thread() {
-            public void run() {
-                try {Thread.sleep(1000000);} catch (InterruptedException ie) {}
-            }
-        };
-        t.start();
-        System.out.println("Serial Comms Started");
-    }
-    
-    public boolean dataAvail()
-    {
-    	return true;
-    }
+	public boolean dataAvail()
+	{
+		return true;
+	}
 }
