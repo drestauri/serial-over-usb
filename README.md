@@ -7,18 +7,19 @@ data in via Windows PC.
 
 ## Installation
 
-Download and add the Serial class to your project. 
+Download and add this Serial class to your project. 
 
-Google and download RXTX for Java (RXTXcomm.jar). This download comes with a Jar and 2 .dll files. Per the included
-install instructions with those, put the jar in <JAVA_HOME>\jre\lib\ext & the dlls in <JAVA_HOME>\jre\bin. In Eclipse/STS4,
-go to Project -> properties -> Java build path -> Libraries -> Add External Jars. Find your RXTX jar. Expand the JAR's
-details. Select Native library location and edit it to point to RXTX's shared library location (\bin folder above)
+Try the link below to download jSerialComm for Java (or google it):
+```link
+https://fazecast.github.io/jSerialComm/
+```
+Add to build path for your project. I usually create a lib folder in my project and copy the
+JAR file there. Then in Eclipse/STS4, right click the JAR -> build path -> add to build path.
 
-Some discussion use to help setup this code:
-	https://stackoverflow.com/questions/15996345/java-arduino-read-data-from-the-serial-port
+
+Some discussion use to help setup this code: https://github.com/Fazecast/jSerialComm/wiki/Event-Based-Reading-Usage-Example
 
 ## Usage
-
 Of course, make sure your DATA_RATE matches the Baud rate of your Arduino or whatever device your using. In my case,
 it was 9600. I didn't write to my Arduino for my project so I commented "output" out. 
 Note that about 1 in 5 data points from my Arduino triggered the exception violation so I just commented that out as well.
@@ -32,5 +33,10 @@ impot home.utils.Serial
 Serial serial = new Serial(3); // the number refers to the comm port, e.g. COM3 which is typical for Arduino on PC
 ```
 
+## Anticipated Updates
+1. Convert the data in the buffer to an actual value instead of just printing the buffer and resetting
+2. Add framework to allow a user to get the last value in integer format
+
 ## Contributing
-This code will not be changed as it's used a template and will serve as the base for other/future projects. 
+This code will not be changed once the above updates are implemented as it's used a template and will serve as
+a baseline for future projects. 
