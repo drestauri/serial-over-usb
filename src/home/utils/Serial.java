@@ -26,11 +26,12 @@ public class Serial implements SerialPortDataListener{
 	private char[] dataBuffer = new char[8];
 	private int bufIndex = 0;
 	
-	private static final String PORT_NAMES[] = {
+	/*private static final String PORT_NAMES[] = {
 			"/dev/tty.usbserial-A9007UX1", // Mac OS X
 			"/dev/ttyUSB0", // Linux
 			"COM3", // Windows
-			};
+			};*/
+	private static String PORT_NAME;
 
 	private BufferedReader input;
 	//private static OutputStream output;
@@ -45,22 +46,32 @@ public class Serial implements SerialPortDataListener{
 		SerialPort[] ports = SerialPort.getCommPorts();
 		
 		// Check each port for a match to our expected ports list PORT_NAMES
+		System.out.println("Found Ports:");
 		for (SerialPort port : ports) 
 		{
 			String currPortId = port.getSystemPortName();
-			for (String portName : PORT_NAMES)
+			System.out.println(currPortId);
+			
+			/*for (String portName : PORT_NAMES)
 			{
 				if (currPortId.equals(portName))
 				{
 					serialPort = port;
 					break;
 				}
+			}*/
+			
+			if (currPortId.equals(PORT_NAME))
+			{
+				serialPort = port;
+				break;
 			}
 		}
 		
+		
 		// If we couldn't find a matching port
 		if (serialPort == null) {
-			System.out.println("Could not find COM port.");
+			System.out.println("Could not find desired COM port.");
 			return;
 		}
 
@@ -189,10 +200,11 @@ public class Serial implements SerialPortDataListener{
 			return -1;
 	}
 
-	// Constructor. Can take a number 3 to 9 if there's a specific comm port to use
-	public Serial(int ncom){
-		if(ncom>3 && ncom<=9)
-			PORT_NAMES[2] = "COM" + Integer.toString(ncom);
+	// Constructor. Takes a string if there's a specific comm port to use
+	public Serial(String com){
+		//if(ncom>3 && ncom<=9)
+			//PORT_NAMES[2] = "COM" + Integer.toString(ncom);
+		PORT_NAME = com;
 		initialize();
 		Thread t=new Thread() {
 			public void run() {
