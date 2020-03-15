@@ -30,7 +30,7 @@ It didn't make anything crash, just made my output window a little busy so use i
 Once all the dependencies have been figured out for the Serial class, usage is pretty straight forward:
 
 ```java
-impot home.utils.Serial
+import home.utils.Serial
 
 Serial serial = new Serial(3); // the number refers to the comm port, e.g. COM3 which is typical for Arduino on PC
 ```
