@@ -32,7 +32,7 @@ Once all the dependencies have been figured out for the Serial class, usage is p
 ```java
 import home.utils.Serial
 
-Serial serial = new Serial(3); // the number refers to the comm port, e.g. COM3 which is typical for Arduino on PC
+Serial serial = new Serial("COM3");
 ```
 
 ## Anticipated Updates
