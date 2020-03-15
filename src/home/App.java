@@ -8,7 +8,10 @@ public class App {
 	{
 		if (args.length != 1)
 		{
-			System.out.println("usage: java -jar serial-over-usb.jar <COMM_PORT>");
+			System.out.println("usage: java -jar serial-over-usb.jar <COMM_PORT>\n");
+			System.out.println("== NOTE ==");
+			System.out.println(" On raspberry pi, use 'ls /dev/*tty*' to list ports with");
+			System.out.println(" your device plugged and then not to identify which name changes");
 			System.exit(-1); // Comment this out during dev
 		}
 		

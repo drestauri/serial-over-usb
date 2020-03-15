@@ -1,23 +1,25 @@
 # serial-over-usb
-Basic framework for receiving data over USB in Java. Used for receiving from Arduino.
+Basic framework for receiving serial data over USB in Java.
 
 This project was created as a starting point for reading serial data from an Arduino
-to a RaspberryPi. As of 3/12/2020 this has only been confirmed to read the Arduino
-data in via Windows PC.
+to a RaspberryPi. This has been confirmed to work on both a Windows PC and RaspberryPi.
 
 ## Installation
 
 Download and add this Serial class to your project. 
 
 Try the link below to download jSerialComm for Java (or google it):
-```link
+```
 https://fazecast.github.io/jSerialComm/
 ```
 Add to build path for your project. I usually create a lib folder in my project and copy the
 JAR file there. Then in Eclipse/STS4, right click the JAR -> build path -> add to build path.
 
 
-Some discussion use to help setup this code: https://github.com/Fazecast/jSerialComm/wiki/Event-Based-Reading-Usage-Example
+Some discussion I used to help setup this code: 
+```
+https://github.com/Fazecast/jSerialComm/wiki/Event-Based-Reading-Usage-Example
+```
 
 ## Usage
 Of course, make sure your DATA_RATE matches the Baud rate of your Arduino or whatever device your using. In my case,
@@ -36,7 +38,9 @@ Serial serial = new Serial(3); // the number refers to the comm port, e.g. COM3 
 ## Anticipated Updates
 1. Convert the data in the buffer to an actual value instead of just printing the buffer and resetting
 2. Add framework to allow a user to get the last value in integer format
+3. Improve the logic to handle all characters (currently optimized for numbers only)
+4. Implement the output stream to the Arduino
 
 ## Contributing
-This code will not be changed once the above updates are implemented as it's used a template and will serve as
+This code will not be changed much once the above updates are implemented as it's used a template and will serve as
 a baseline for future projects. 
