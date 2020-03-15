@@ -37,7 +37,7 @@ Serial serial = new Serial(args[0]);
 
 Then once exported to a JAR it can be run from the command line as follows:
 ```
-java -jar serial-over-usb COM3
+java -jar serial-over-usb.jar COM3
 ```
 
 ## Anticipated Updates
