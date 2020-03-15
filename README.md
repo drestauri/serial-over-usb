@@ -32,7 +32,12 @@ Once all the dependencies have been figured out for the Serial class, usage is p
 ```java
 import home.utils.Serial
 
-Serial serial = new Serial("COM3");
+Serial serial = new Serial(args[0]);
+```
+
+Then once exported to a JAR it can be run from the command line as follows:
+```
+java -jar serial-over-usb COM3
 ```
 
 ## Anticipated Updates
