@@ -42,8 +42,6 @@ public class Serial implements SerialPortDataListener{
 	
 	// Constructor. Takes a string if there's a specific comm port to use
 	public Serial(String com){
-		//if(ncom>3 && ncom<=9)
-			//PORT_NAMES[2] = "COM" + Integer.toString(ncom);
 		PORT_NAME = com;
 		initialize();
 		Thread t=new Thread() {
