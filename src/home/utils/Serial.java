@@ -167,6 +167,8 @@ public class Serial implements SerialPortDataListener{
 		}
 	}
 
+	// processing data when using LISTENING_EVENT_DATA_RECEIVED
+	// It doesn't come through very organized so I focused efforts on the other method
 	private void processDataReceived(byte[] newData)
 	{ 
 		for (int i = 0; i < newData.length; ++i)

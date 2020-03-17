@@ -1,0 +1,6 @@
+# comment
+*.class
+*.jar
+*.txt
+bin/
+release/
