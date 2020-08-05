@@ -10,9 +10,10 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 
-import home.App;
+import home.App_EBM;
 
 // TODO:
+// > Clean up and summarize planned updates
 // > Add functionality to measure time between data points, possibly last 8 data points?
 
 
@@ -29,7 +30,6 @@ import home.App;
 public class Serial implements SerialPortDataListener{
 	private static final int DATA_BUFFER_SIZE = 16;	// max number of characters to pull from the serial interface
 	private static final int DATA_HISTORY_SIZE = 8; // max last values to save
-	//private static final int TIME_OUT = 2000;
 	private static final int DATA_RATE = 115200;
 	private static String PORT_NAME;
 	
@@ -51,15 +51,9 @@ public class Serial implements SerialPortDataListener{
 	public Serial(String com){
 		PORT_NAME = com;
 		initialize();
-		Thread t=new Thread() {
-			public void run() {
-				try {Thread.sleep(1000000);} catch (InterruptedException ie) {}
-			}
-		};
 		
 		if (serialPort != null)
 		{
-			t.start();
 			System.out.println("Serial Comms Started");
 		}
 	}
@@ -87,7 +81,6 @@ public class Serial implements SerialPortDataListener{
 		// If we couldn't find a matching port
 		if (serialPort == null) {
 			System.out.println("Could not find desired COM port.");
-			App.log.LogMessage_High("Could not find desired COM port.");
 			return;
 		}
 
@@ -156,7 +149,6 @@ public class Serial implements SerialPortDataListener{
 		byte[] newData = new byte[serialPort.bytesAvailable()];
 		// Fill the buffer with data off the serial bus
 		serialPort.readBytes(newData, newData.length);
-
 		// Step through each character in the newData buffer
 		for (int i = 0; i < newData.length; ++i)
 		{
@@ -201,7 +193,6 @@ public class Serial implements SerialPortDataListener{
 				// If we receive anything other than 10 or 13 (ACSII) put the character in the buffer
 				if(bufIndex >= DATA_BUFFER_SIZE)
 				{
-					App.log.LogMessage_High("Error: Data buffer overflow. Current buffer: " + String.valueOf(dataBuffer, 0, DATA_BUFFER_SIZE-1));
 					System.err.println("Error: Data buffer overflow. Current buffer: " + String.valueOf(dataBuffer, 0, DATA_BUFFER_SIZE-1));
 					dataOverflow = true;
 				}
@@ -229,7 +220,6 @@ public class Serial implements SerialPortDataListener{
 		// Increment start data index and make sure it doesn't exceed the array bounds
 		if(curDataIndex == startDataIndex)
 		{
-			App.log.LogMessage_Low("WARNING: Exceeded data history array size. Data was lost");
 			startDataIndex++;
 			if(startDataIndex >= DATA_HISTORY_SIZE)
 				startDataIndex=0;
@@ -282,7 +272,6 @@ public class Serial implements SerialPortDataListener{
 			// Make sure all the characters of the string are numbers
 			if(tStr.charAt(i) < '0' || tStr.charAt(i) > '9')
 			{
-				App.log.LogMessage_High("ERROR: Attempted to convert non integer data point to an integer");
 				System.err.println("ERROR: Attempted to convert non integer data point to an integer");
 				return -1;
 			}
@@ -291,12 +280,13 @@ public class Serial implements SerialPortDataListener{
 	}
 	
 	
+	public boolean isConnected()
+	{
+		if(serialPort == null)
+			return false;
+		return true;
+	}
 
-
-	// This function only returns true once for each time lastData is updated
-	// The assumption is if you test this and it returns true then you accessed lastData
-	// immediately after. In which case, new data is no longer available and this function
-	// should return false until the next data point is received
 	public boolean isDataAvail()
 	{
 		// If start index isn't on top of current data index, then we have data
