@@ -23,7 +23,7 @@ https://github.com/Fazecast/jSerialComm/wiki/Event-Based-Reading-Usage-Example
 
 ## Usage
 Of course, make sure your DATA_RATE matches the Baud rate of your Arduino or whatever device your using. In my case,
-it was 9600. I didn't write to my Arduino for my project so I commented "output" out. 
+it was 115200. I didn't write to my Arduino for my project so I commented "output" out. 
 Note that about 1 in 5 data points from my Arduino triggered the exception violation so I just commented that out as well.
 It didn't make anything crash, just made my output window a little busy so use it to your delight.
 
@@ -35,16 +35,13 @@ import home.utils.Serial
 Serial serial = new Serial(args[0]);
 ```
 
-Then once exported to a JAR it can be run from the command line as follows:
+Then once exported to a JAR it can be run from the command line as follows by replacing COM3 with your desired comm port:
 ```
 java -jar serial-over-usb.jar COM3
 ```
 
 ## Anticipated Updates
-1. Convert the data in the buffer to an actual value instead of just printing the buffer and resetting
-2. Add framework to allow a user to get the last value in integer format
-3. Improve the logic to handle all characters (currently optimized for numbers only)
-4. Implement the output stream to the Arduino
+1. Implement the output stream to the Arduino
 
 ## Contributing
 This code will not be changed much once the above updates are implemented as it's used a template and will serve as
